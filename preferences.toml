@@ -2,8 +2,8 @@
 # Step 3 covers one slice only (Serie A). Step 4 adds the rest: tiers 1-5, team
 # boosts and the wildcard.
 
-# Kick-off times in replies are given in this time zone.
-timezone = "Europe/Paris"
+# Kick-off times in replies are given in this time zone (where I usually am).
+timezone = "America/New_York"
 
 # "Starting soon" means kicking off within this many hours.
 starting_soon_hours = 3
