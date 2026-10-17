@@ -1,0 +1,3 @@
+# What the app needs to run (pinned to the versions tested in Cloud Shell)
+fastapi==0.141.1
+uvicorn==0.52.1
