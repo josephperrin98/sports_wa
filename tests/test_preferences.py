@@ -18,6 +18,7 @@ class ToPromptTest(unittest.TestCase):
             "min_events": 3,
             "max_events": 5,
             "max_per_sport": 2,
+            "channels_per_event": 3,
             "language_rules": ["Rule one.", "Rule two."],
             "competitions": [{"name": "Ligue 1", "tier": 1, "language": "French"}],
         }
@@ -27,6 +28,7 @@ class ToPromptTest(unittest.TestCase):
         self.assertIn("- Ligue 1 (tier 1): search French broadcasters, in French.", prompt)
         self.assertIn("1. Rule one.\n2. Rule two.", prompt)
         self.assertIn("3 to 5 events, at most 2 from the same sport", prompt)
+        self.assertIn("up to 3 channels per event, main one first", prompt)
         self.assertIn("within 3 hours", prompt)
         self.assertIn("Europe/Paris", prompt)
 

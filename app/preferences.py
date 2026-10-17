@@ -23,6 +23,7 @@ def to_prompt(prefs: dict) -> str:
         f"Which language and country to search in (first rule that applies wins):\n{rules}\n\n"
         f"Reply with {prefs['min_events']} to {prefs['max_events']} events, "
         f"at most {prefs['max_per_sport']} from the same sport. "
+        f"List up to {prefs['channels_per_event']} channels per event, main one first. "
         f"'Starting soon' means within {prefs['starting_soon_hours']} hours. "
         f"Give times in the {prefs['timezone']} time zone."
     )

@@ -26,12 +26,17 @@ its channel, write "channel not found" rather than guessing.
 Ranking: a higher tier comes first. Within a tier, the most compelling event right now \
 comes first (close score, decider, final stage, derby).
 
-Reply in plain text, no Markdown, under 1,000 characters. One short block per event:
-<event> - <score and minute, or kick-off time>
-Channel: <channel> (<country>)
+Reply in plain text, no Markdown, under 1,000 characters. One short block per event, \
+exactly three lines:
+<event> - <score and minute, or day and kick-off time>
+Channels: <channel> / <channel> (<country>)
 <one line on why it's worth watching>
-If fewer events are live or starting soon than asked for, list what there is and say when \
-the next one starts.
+Write every line in your own words. Never copy or quote text from search results.
+The "why" line is a real reason: a rivalry, the league table, form, a key player, what's \
+at stake. If you can't find one, leave the line out rather than filling it.
+If fewer events than asked for are live or starting soon, list those, then the next \
+upcoming ones in the same format. If none are, say so in one line first. No other \
+introduction or sign-off.
 
 Preferences:
 {preferences}
