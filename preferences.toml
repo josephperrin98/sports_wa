@@ -1,0 +1,27 @@
+# What I like to watch. app/preferences.py turns this into instructions for Claude.
+# Step 3 covers one slice only (Serie A). Step 4 adds the rest: tiers 1-5, team
+# boosts and the wildcard.
+
+# Kick-off times in replies are given in this time zone.
+timezone = "Europe/Paris"
+
+# "Starting soon" means kicking off within this many hours.
+starting_soon_hours = 3
+
+# Events per reply, and at most this many from the same sport.
+min_events = 3
+max_events = 5
+max_per_sport = 2
+
+# Which language (and so which country's broadcasters) to search for each event.
+# The first rule that applies wins. Any language is fine, even ones I don't speak.
+language_rules = [
+  "The language set for the competition in this list.",
+  "Else the language of the league or competition (Serie A -> Italian).",
+  "Else the home team's language.",
+]
+
+[[competitions]]
+name = "Serie A"
+tier = 3
+language = "Italian"
