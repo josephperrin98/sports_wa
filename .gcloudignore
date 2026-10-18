@@ -1,0 +1,7 @@
+# Files never uploaded to Google Cloud when deploying. Secrets above all.
+.env
+.git/
+.gitignore
+.venv/
+__pycache__/
+tests/
