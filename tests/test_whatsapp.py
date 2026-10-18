@@ -4,13 +4,40 @@ import unittest
 from unittest import mock
 from urllib.parse import parse_qs
 
-from app.whatsapp import IncomingMessage, build_reply, parse_incoming, send_message
+from app.whatsapp import (IncomingMessage, build_reply, is_from_twilio, parse_incoming,
+                          send_message, sign, webhook_url)
 
 TWILIO_ENV = {
     "TWILIO_ACCOUNT_SID": "AC123",
     "TWILIO_AUTH_TOKEN": "secret",
     "TWILIO_WHATSAPP_FROM": "whatsapp:+14155238886",
 }
+
+
+class SignatureTest(unittest.TestCase):
+    # Twilio's own example, from the tests of its official Python library.
+    URL = "https://mycompany.com/myapp.php?foo=1&bar=2"
+    BODY = b"CallSid=CA1234567890ABCDE&Caller=%2B14158675309&Digits=1234&From=%2B14158675309&To=%2B18005551212"
+
+    def test_matches_twilios_published_example(self):
+        self.assertEqual(sign(self.URL, self.BODY, "12345"), "RSOYDt4T1cUTdK1PDd93/VVr8B8=")
+
+    def test_accepts_a_correct_signature(self):
+        with mock.patch.dict(os.environ, {"TWILIO_AUTH_TOKEN": "12345"}):
+            self.assertTrue(is_from_twilio(self.URL, self.BODY, "RSOYDt4T1cUTdK1PDd93/VVr8B8="))
+
+    def test_rejects_a_wrong_or_missing_signature(self):
+        with mock.patch.dict(os.environ, {"TWILIO_AUTH_TOKEN": "12345"}):
+            self.assertFalse(is_from_twilio(self.URL, self.BODY, "forged="))
+            self.assertFalse(is_from_twilio(self.URL, self.BODY, ""))
+
+    def test_rejects_everything_when_the_auth_token_is_not_set(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(is_from_twilio(self.URL, self.BODY, "RSOYDt4T1cUTdK1PDd93/VVr8B8="))
+
+    def test_rebuilds_the_https_url_twilio_called(self):
+        self.assertEqual(webhook_url("sports-wa.a.run.app", "/webhook/whatsapp"),
+                         "https://sports-wa.a.run.app/webhook/whatsapp")
 
 
 class ParseIncomingTest(unittest.TestCase):

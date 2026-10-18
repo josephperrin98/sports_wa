@@ -1,6 +1,7 @@
 """Decides what to reply. Knows nothing about Twilio or HTTP."""
 
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -55,6 +56,10 @@ class Plan:
 
 def plan_for(sender: str, text: str) -> Plan:
     """Decide what to do with a message within Twilio's time limit, before any slow work."""
+    if sender != os.environ.get("MY_WHATSAPP_NUMBER"):
+        # Every answer costs money, so only my number gets one. No reply at all to others.
+        log.warning("Ignored a message from a number that isn't mine")
+        return Plan("", answer_later=False)
     if not text.strip():
         return Plan(EMPTY_HINT, answer_later=False)
     return Plan(ACK, answer_later=True)

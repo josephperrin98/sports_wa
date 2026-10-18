@@ -14,7 +14,11 @@ app = FastAPI()
 
 @app.post("/webhook/whatsapp")
 async def incoming_whatsapp(request: Request, background: BackgroundTasks) -> Response:
-    message = whatsapp.parse_incoming(await request.body())
+    body = await request.body()
+    url = whatsapp.webhook_url(request.headers.get("host", ""), request.url.path)
+    if not whatsapp.is_from_twilio(url, body, request.headers.get("X-Twilio-Signature", "")):
+        return Response(status_code=403)
+    message = whatsapp.parse_incoming(body)
     plan = service.plan_for(message.sender, message.text)
     if plan.answer_later:
         # Runs after the response is sent, so Twilio gets its quick reply in time.

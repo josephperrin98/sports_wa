@@ -5,6 +5,8 @@ Everything that knows Twilio's formats lives here, so moving to another provider
 """
 
 import base64
+import hashlib
+import hmac
 import os
 import urllib.error
 import urllib.request
@@ -20,6 +22,37 @@ class IncomingMessage:
     sender: str  # e.g. "whatsapp:+33600000000"
     text: str
     message_id: str  # Twilio's MessageSid, unique per message
+
+
+def webhook_url(host: str, path: str) -> str:
+    """The public URL Twilio called, which is what Twilio signs.
+
+    Cloud Run receives requests over plain HTTP behind its HTTPS front door, so the app
+    sees the wrong scheme. The Host header and the path are right.
+    """
+    return f"https://{host}{path}"
+
+
+def sign(url: str, form_body: bytes, auth_token: str) -> str:
+    """Twilio's signature: the URL followed by every parameter name and value (sorted by
+    name, no separators), hashed with HMAC-SHA1 keyed with the auth token, in base64."""
+    fields = parse_qs(form_body.decode("utf-8"), keep_blank_values=True)
+    text = url + "".join(name + value for name in sorted(fields) for value in sorted(set(fields[name])))
+    digest = hmac.new(auth_token.encode("utf-8"), text.encode("utf-8"), hashlib.sha1).digest()
+    return base64.b64encode(digest).decode("ascii")
+
+
+def is_from_twilio(url: str, form_body: bytes, signature: str) -> bool:
+    """True only if the X-Twilio-Signature header proves Twilio sent this request.
+
+    Anyone can find the URL, but only Twilio and this app know the auth token.
+    """
+    auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "")
+    if not auth_token or not signature:
+        return False
+    # compare_digest takes the same time however many characters match, so timing
+    # doesn't reveal how close a forged signature was.
+    return hmac.compare_digest(sign(url, form_body, auth_token).encode(), signature.encode())
 
 
 def parse_incoming(form_body: bytes) -> IncomingMessage:

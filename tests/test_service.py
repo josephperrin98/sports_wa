@@ -5,6 +5,7 @@ from unittest import mock
 from app import claude, service
 
 NOW = datetime(2026, 10, 17, 18, 30, tzinfo=timezone.utc)
+ME = "whatsapp:+33600000000"
 
 
 class FakeAsk:
@@ -47,14 +48,19 @@ class ReplyToTest(unittest.TestCase):
         self.assertIn("couldn't check what's on", reply)
 
 
+@mock.patch.dict("os.environ", {"MY_WHATSAPP_NUMBER": ME})
 class PlanForTest(unittest.TestCase):
     def test_a_question_gets_a_quick_ack_and_a_later_answer(self):
-        self.assertEqual(service.plan_for("whatsapp:+33600000000", "what's on?"),
-                         service.Plan(service.ACK, answer_later=True))
+        self.assertEqual(service.plan_for(ME, "what's on?"), service.Plan(service.ACK, answer_later=True))
 
     def test_an_empty_message_gets_the_hint_and_nothing_later(self):
-        self.assertEqual(service.plan_for("whatsapp:+33600000000", " "),
-                         service.Plan(service.EMPTY_HINT, answer_later=False))
+        self.assertEqual(service.plan_for(ME, " "), service.Plan(service.EMPTY_HINT, answer_later=False))
+
+    def test_another_number_gets_nothing_at_all(self):
+        with self.assertLogs("app.service", level="WARNING"):
+            plan = service.plan_for("whatsapp:+15550001111", "what's on?")
+
+        self.assertEqual(plan, service.Plan("", answer_later=False))
 
 
 class AnswerTest(unittest.TestCase):
