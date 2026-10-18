@@ -1,12 +1,12 @@
 # What I like to watch. app/preferences.py turns this into instructions for Claude.
 
-# Kick-off times in replies are given in this time zone (where I usually am),
-# with this label after them so they're never ambiguous.
+# Replies cover today only, in this time zone (where I usually am): events live
+# now or starting before midnight. Times carry the label so they're never ambiguous.
 timezone = "America/New_York"
 timezone_label = "ET"
 
-# "Starting soon" means kicking off within this many hours.
-starting_soon_hours = 3
+# Men's teams and competitions only (Lyon means the men's team, not OL Lyonnes).
+mens_only = true
 
 # Events per reply (plus the wildcard), and at most this many from the same sport.
 min_events = 3
@@ -41,8 +41,8 @@ language = "French"
 name = "France national football team"
 language = "French"
 
-# Tier 1 is always shown if live or starting soon. Anything not listed is the
-# last tier, shown only when the tiers above can't fill the reply.
+# Tier 1 is always shown if on today. Anything not listed is the last tier,
+# used to fill the reply when the tiers above don't have enough today.
 # "language" is set only where it differs from the league's own language.
 
 [[competitions]]
@@ -126,11 +126,11 @@ name = "Second-tier cycling races"
 tier = 4
 language = "French"
 
-# One random real sport from anywhere in the world, in every reply.
+# One little-known sport from anywhere in the world, in every reply.
 # Not yet: "no repeat within 14 days" needs a memory of past replies.
 [wildcard]
 rules = [
-  "A real event with a source you found, and a way to watch it.",
-  "Live or starting soon if possible. Else the next real upcoming event or a replay you can watch, labelled (upcoming) or (replay).",
-  "Not a sport already in the reply.",
+  "A sport most people in France or the US have never watched (like kok boru in Kyrgyzstan or sepak takraw in Thailand). Never a major league or a sport from the tiers above.",
+  "A real event you found in a search, with a way to watch it.",
+  "Live or on today if possible. Else a replay I can watch now, labelled (replay).",
 ]

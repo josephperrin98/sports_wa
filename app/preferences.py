@@ -5,6 +5,11 @@ from pathlib import Path
 
 DEFAULT_PATH = Path(__file__).resolve().parent.parent / "preferences.toml"
 
+MENS_ONLY = (
+    "Men's teams and competitions only. A women's team with a name like one I follow "
+    "doesn't count (OL Lyonnes is Lyon's women's team).\n\n"
+)
+
 
 def load(path: Path = DEFAULT_PATH) -> dict:
     with path.open("rb") as f:
@@ -27,17 +32,19 @@ def to_prompt(prefs: dict) -> str:
     label = prefs["timezone_label"]
     return (
         f"Teams I follow, shown whenever they play, in any competition, above every tier:\n{teams}\n\n"
-        f"Competitions by tier (tier 1 matters most; tier 1 is always shown if live or starting soon):\n"
+        f"Competitions by tier (tier 1 matters most; tier 1 is always shown if on today):\n"
         f"{competitions}\n"
         f"- Anything else is tier {last_tier}: only when the tiers above can't fill the reply.\n\n"
+        f"{MENS_ONLY if prefs.get('mens_only') else ''}"
         f"Tennis: {prefs['tennis_rule']}\n\n"
         f"Which language and country to search in (first rule that applies wins):\n{rules}\n\n"
         f"Wildcard, exactly one per reply, after the events:\n{wildcard}\n\n"
         f"Reply with {prefs['min_events']} to {prefs['max_events']} events plus the wildcard, "
         f"at most {prefs['max_per_sport']} events from the same sport. "
-        f"Always reach {prefs['min_events']} events: if fewer are live or starting soon, "
-        f"add the next upcoming ones. "
+        f"Only today's events: live now, or starting before midnight in the {prefs['timezone']} time zone. "
+        f"Never an event on another day, and never one that has ended. "
+        f"Reach {prefs['min_events']} events by going down the tiers, to tier {last_tier} if needed, "
+        f"still only today. If there are really fewer today, list those and stop. "
         f"List up to {prefs['channels_per_event']} channels per event, main one first. "
-        f"'Starting soon' means within {prefs['starting_soon_hours']} hours. "
         f"Give times in the {prefs['timezone']} time zone, followed by \"{label}\" (for example 2:45 PM {label})."
     )

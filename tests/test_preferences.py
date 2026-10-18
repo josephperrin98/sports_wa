@@ -19,7 +19,7 @@ class ToPromptTest(unittest.TestCase):
     PREFS = {
         "timezone": "Europe/Paris",
         "timezone_label": "CET",
-        "starting_soon_hours": 3,
+        "mens_only": True,
         "min_events": 3,
         "max_events": 5,
         "max_per_sport": 2,
@@ -49,11 +49,18 @@ class ToPromptTest(unittest.TestCase):
         self.assertIn("1. Rule one.\n2. Rule two.", self.prompt)
         self.assertIn("exactly one per reply, after the events:\n- A real event.", self.prompt)
 
-    def test_renders_limits_and_the_minimum(self):
+    def test_renders_the_limits(self):
         self.assertIn("3 to 5 events plus the wildcard, at most 2 events from the same sport", self.prompt)
-        self.assertIn("Always reach 3 events: if fewer are live or starting soon, add the next upcoming ones", self.prompt)
         self.assertIn("up to 3 channels per event, main one first", self.prompt)
-        self.assertIn("within 3 hours", self.prompt)
+
+    def test_only_today_and_the_minimum_comes_from_lower_tiers_not_other_days(self):
+        self.assertIn("Only today's events: live now, or starting before midnight in the Europe/Paris time zone", self.prompt)
+        self.assertIn("Never an event on another day", self.prompt)
+        self.assertIn("Reach 3 events by going down the tiers, to tier 3 if needed, still only today", self.prompt)
+
+    def test_mens_only_is_stated_when_set_and_left_out_when_not(self):
+        self.assertIn("Men's teams and competitions only", self.prompt)
+        self.assertNotIn("Men's teams", preferences.to_prompt({**self.PREFS, "mens_only": False}))
 
     def test_times_carry_the_time_zone_label(self):
         self.assertIn('Europe/Paris time zone, followed by "CET" (for example 2:45 PM CET)', self.prompt)
