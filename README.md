@@ -2,13 +2,20 @@
 
 A WhatsApp bot that answers "what's on?" with a short, ranked list of live sports and the channel to watch them on. Work in progress: currently answers for Serie A only, with Claude and web search.
 
+## How a question is answered
+
+Claude takes 30-40 seconds, longer than Twilio waits for a reply, and a Twilio trial account can't send a message later. So:
+
+1. "what's on?" gets "On it..." straight away, and the search starts in the background.
+2. Any next message collects the answer (or "Still checking" if it isn't ready yet).
+
 ## Layout
 
-- `app/whatsapp.py`: everything Twilio-specific: signature check, parsing webhooks, replies, sending messages
-- `app/service.py`: decides what to reply (builds the prompt, asks Claude)
+- `app/whatsapp.py`: everything Twilio-specific: signature check, parsing webhooks, replies
+- `app/service.py`: decides what to reply (builds the prompt, asks Claude, keeps the answer until it's collected)
 - `app/claude.py`: calls the Claude API with web search, using only the standard library
 - `app/preferences.py` + `preferences.toml`: what I like to watch, turned into prompt text
-- `app/main.py`: FastAPI route `POST /webhook/whatsapp`: acks at once, answers in the background
+- `app/main.py`: FastAPI route `POST /webhook/whatsapp`: replies at once, searches in the background
 - `Dockerfile`: how Cloud Run builds and starts the app
 
 ## Run the tests
@@ -37,4 +44,6 @@ gcloud run deploy sports-wa --source . --region us-east1 --no-cpu-throttling --m
 rm /tmp/sports-wa-env.yaml
 ```
 
-`--no-cpu-throttling` keeps the CPU on after the webhook response, which the background answer needs. `--allow-unauthenticated` lets Twilio reach the URL. The app itself rejects any request without a valid Twilio signature.
+`--no-cpu-throttling` keeps the CPU on after the webhook response, which the background search needs. `--max-instances 1` keeps the waiting answer and the next message in the same process. `--allow-unauthenticated` lets Twilio reach the URL. The app itself rejects any request without a valid Twilio signature.
+
+After a code-only change, `gcloud run deploy sports-wa --source . --region us-east1` is enough: the new version keeps the settings and flags of the last one.

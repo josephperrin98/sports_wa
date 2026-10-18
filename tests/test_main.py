@@ -2,7 +2,7 @@ import importlib.util
 import unittest
 from unittest import mock
 
-from app import whatsapp
+from app import service, whatsapp
 
 # Skipped where FastAPI isn't installed, so the other tests can still run there.
 HAS_FASTAPI = importlib.util.find_spec("fastapi") is not None
@@ -22,6 +22,10 @@ class WhatsAppWebhookTest(unittest.TestCase):
         env = mock.patch.dict("os.environ", {"TWILIO_AUTH_TOKEN": "test-token", "MY_WHATSAPP_NUMBER": ME})
         env.start()
         self.addCleanup(env.stop)
+        # A fresh, empty answer box for each test.
+        box = mock.patch("app.service.BOX", service.AnswerBox())
+        box.start()
+        self.addCleanup(box.stop)
 
     def post(self, body, signature=None):
         if signature is None:
@@ -33,17 +37,18 @@ class WhatsAppWebhookTest(unittest.TestCase):
             headers={"Content-Type": "application/x-www-form-urlencoded", "X-Twilio-Signature": signature},
         )
 
-    def test_acks_at_once_and_answers_in_the_background(self):
-        # Stand in for the slow answer so the test never calls Claude or Twilio.
-        with mock.patch("app.service.answer") as answer:
-            response = self.post(BODY)
+    def test_acks_at_once_then_the_next_message_collects_the_answer(self):
+        # Stand in for Claude so the test never calls the API.
+        with mock.patch("app.service.reply_to", return_value="Inter v Milan") as reply_to:
+            first = self.post(BODY)
+            # TestClient runs background tasks before returning, so the answer is already waiting.
+            second = self.post(BODY)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.headers["content-type"].startswith("application/xml"))
-        self.assertIn("<Message>On it", response.text)
-        # TestClient runs background tasks before returning, so the call is already recorded.
-        answer.assert_called_once()
-        self.assertEqual(answer.call_args.args[:2], (ME, "hello"))
+        self.assertEqual(first.status_code, 200)
+        self.assertTrue(first.headers["content-type"].startswith("application/xml"))
+        self.assertIn("<Message>On it", first.text)
+        self.assertIn("<Message>Inter v Milan</Message>", second.text)
+        reply_to.assert_called_once_with("hello")
 
     def test_rejects_a_request_without_a_valid_twilio_signature(self):
         with mock.patch("app.service.answer") as answer:

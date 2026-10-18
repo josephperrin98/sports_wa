@@ -22,5 +22,5 @@ async def incoming_whatsapp(request: Request, background: BackgroundTasks) -> Re
     plan = service.plan_for(message.sender, message.text)
     if plan.answer_later:
         # Runs after the response is sent, so Twilio gets its quick reply in time.
-        background.add_task(service.answer, message.sender, message.text, whatsapp.send_message)
+        background.add_task(service.answer, message.text)
     return Response(content=whatsapp.build_reply(plan.reply_now), media_type="application/xml")

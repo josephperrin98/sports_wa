@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from app import claude, service
@@ -50,34 +50,66 @@ class ReplyToTest(unittest.TestCase):
 
 @mock.patch.dict("os.environ", {"MY_WHATSAPP_NUMBER": ME})
 class PlanForTest(unittest.TestCase):
-    def test_a_question_gets_a_quick_ack_and_a_later_answer(self):
-        self.assertEqual(service.plan_for(ME, "what's on?"), service.Plan(service.ACK, answer_later=True))
+    def setUp(self):
+        self.box = service.AnswerBox()
+
+    def plan(self, text="what's on?", minutes_later=0, sender=ME):
+        return service.plan_for(sender, text, now=NOW + timedelta(minutes=minutes_later), box=self.box)
+
+    def test_a_question_gets_a_quick_ack_and_starts_a_search(self):
+        self.assertEqual(self.plan(), service.Plan(service.ACK, answer_later=True))
+
+    def test_a_message_during_the_search_gets_still_checking_and_no_second_search(self):
+        self.plan()
+
+        self.assertEqual(self.plan("?", minutes_later=0.5), service.Plan(service.STILL_CHECKING, answer_later=False))
+
+    def test_the_next_message_collects_the_answer_once(self):
+        self.plan()
+        self.box.fill("Inter v Milan", NOW + timedelta(minutes=1))
+
+        self.assertEqual(self.plan("?", minutes_later=2), service.Plan("Inter v Milan", answer_later=False))
+        self.assertEqual(self.plan("what's on?", minutes_later=3), service.Plan(service.ACK, answer_later=True))
+
+    def test_an_answer_left_too_long_is_dropped_and_a_new_search_starts(self):
+        self.plan()
+        self.box.fill("Inter v Milan", NOW + timedelta(minutes=1))
+
+        self.assertEqual(self.plan(minutes_later=12), service.Plan(service.ACK, answer_later=True))
+
+    def test_a_search_that_never_finished_is_given_up_on(self):
+        self.plan()
+
+        self.assertEqual(self.plan(minutes_later=6), service.Plan(service.ACK, answer_later=True))
 
     def test_an_empty_message_gets_the_hint_and_nothing_later(self):
-        self.assertEqual(service.plan_for(ME, " "), service.Plan(service.EMPTY_HINT, answer_later=False))
+        self.assertEqual(self.plan(" "), service.Plan(service.EMPTY_HINT, answer_later=False))
 
     def test_another_number_gets_nothing_at_all(self):
         with self.assertLogs("app.service", level="WARNING"):
-            plan = service.plan_for("whatsapp:+15550001111", "what's on?")
+            plan = self.plan(sender="whatsapp:+15550001111")
 
         self.assertEqual(plan, service.Plan("", answer_later=False))
 
 
 class AnswerTest(unittest.TestCase):
-    def test_sends_the_reply_to_the_sender(self):
-        sent = []
+    def test_leaves_the_reply_in_the_box(self):
+        box = service.AnswerBox()
+        box.claim(NOW)
 
         with mock.patch.object(service, "reply_to", return_value="Inter v Milan"):
-            service.answer("whatsapp:+33600000000", "what's on?", send=lambda to, text: sent.append((to, text)))
+            service.answer("what's on?", now=NOW, box=box)
 
-        self.assertEqual(sent, [("whatsapp:+33600000000", "Inter v Milan")])
+        self.assertEqual(box.claim(NOW), ("answer", "Inter v Milan"))
 
-    def test_a_send_failure_is_logged_not_raised(self):
-        def broken_send(to, text):
-            raise RuntimeError("Twilio returned 400")
+    def test_an_unexpected_error_leaves_an_apology_instead_of_a_stuck_search(self):
+        box = service.AnswerBox()
+        box.claim(NOW)
 
-        with mock.patch.object(service, "reply_to", return_value="x"), self.assertLogs("app.service"):
-            service.answer("whatsapp:+33600000000", "what's on?", send=broken_send)
+        with mock.patch.object(service, "reply_to", side_effect=RuntimeError("boom")), self.assertLogs("app.service"):
+            service.answer("what's on?", now=NOW, box=box)
+
+        self.assertEqual(box.claim(NOW), ("answer", service.SORRY))
 
 
 if __name__ == "__main__":
