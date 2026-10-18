@@ -1,11 +1,15 @@
 """Decides what to reply. Knows nothing about Twilio or HTTP."""
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from app import claude, preferences
 
 log = logging.getLogger(__name__)
+
+EMPTY_HINT = "I can only read text messages for now."
+ACK = "On it, checking what's on. Back in about 30 seconds."
 
 SYSTEM_PROMPT = """\
 You are a sports curator on WhatsApp for one person. When they ask what's on, use web \
@@ -43,9 +47,34 @@ Preferences:
 """
 
 
+@dataclass(frozen=True)
+class Plan:
+    reply_now: str  # sent straight back in the webhook response ("" sends nothing)
+    answer_later: bool  # whether to ask Claude and send its answer as a second message
+
+
+def plan_for(sender: str, text: str) -> Plan:
+    """Decide what to do with a message within Twilio's time limit, before any slow work."""
+    if not text.strip():
+        return Plan(EMPTY_HINT, answer_later=False)
+    return Plan(ACK, answer_later=True)
+
+
+def answer(sender: str, text: str, send) -> None:
+    """Runs after Twilio has had its quick reply: ask Claude, then send the answer.
+
+    `send(to, text)` delivers the message. Nobody is waiting on this function, so errors
+    are logged rather than raised.
+    """
+    try:
+        send(sender, reply_to(text))
+    except Exception:
+        log.exception("Couldn't send the answer")
+
+
 def reply_to(text: str, now: datetime | None = None, ask=claude.ask) -> str:
     if not text.strip():
-        return "I can only read text messages for now."
+        return EMPTY_HINT
     now = now or datetime.now(timezone.utc)
     system = SYSTEM_PROMPT.format(preferences=preferences.to_prompt(preferences.load()))
     # The time goes in the message, not the system prompt, so the system prompt never changes.

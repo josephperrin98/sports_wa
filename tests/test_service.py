@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime, timezone
+from unittest import mock
 
 from app import claude, service
 
@@ -44,6 +45,33 @@ class ReplyToTest(unittest.TestCase):
             reply = service.reply_to("what's on?", now=NOW, ask=ask)
 
         self.assertIn("couldn't check what's on", reply)
+
+
+class PlanForTest(unittest.TestCase):
+    def test_a_question_gets_a_quick_ack_and_a_later_answer(self):
+        self.assertEqual(service.plan_for("whatsapp:+33600000000", "what's on?"),
+                         service.Plan(service.ACK, answer_later=True))
+
+    def test_an_empty_message_gets_the_hint_and_nothing_later(self):
+        self.assertEqual(service.plan_for("whatsapp:+33600000000", " "),
+                         service.Plan(service.EMPTY_HINT, answer_later=False))
+
+
+class AnswerTest(unittest.TestCase):
+    def test_sends_the_reply_to_the_sender(self):
+        sent = []
+
+        with mock.patch.object(service, "reply_to", return_value="Inter v Milan"):
+            service.answer("whatsapp:+33600000000", "what's on?", send=lambda to, text: sent.append((to, text)))
+
+        self.assertEqual(sent, [("whatsapp:+33600000000", "Inter v Milan")])
+
+    def test_a_send_failure_is_logged_not_raised(self):
+        def broken_send(to, text):
+            raise RuntimeError("Twilio returned 400")
+
+        with mock.patch.object(service, "reply_to", return_value="x"), self.assertLogs("app.service"):
+            service.answer("whatsapp:+33600000000", "what's on?", send=broken_send)
 
 
 if __name__ == "__main__":

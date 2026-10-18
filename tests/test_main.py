@@ -15,9 +15,9 @@ class WhatsAppWebhookTest(unittest.TestCase):
 
         self.client = TestClient(app)
 
-    def test_passes_the_message_to_the_service_and_wraps_the_reply_in_twiml(self):
-        # Stand in for the service so the test never calls Claude.
-        with mock.patch("app.service.reply_to", side_effect=lambda text: f"got {text}"):
+    def test_acks_at_once_and_answers_in_the_background(self):
+        # Stand in for the slow answer so the test never calls Claude or Twilio.
+        with mock.patch("app.service.answer") as answer:
             response = self.client.post(
                 "/webhook/whatsapp",
                 content=b"From=whatsapp%3A%2B33600000000&Body=hello&MessageSid=SM1",
@@ -26,7 +26,10 @@ class WhatsAppWebhookTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.headers["content-type"].startswith("application/xml"))
-        self.assertIn("<Message>got hello</Message>", response.text)
+        self.assertIn("<Message>On it", response.text)
+        # TestClient runs background tasks before returning, so the call is already recorded.
+        answer.assert_called_once()
+        self.assertEqual(answer.call_args.args[:2], ("whatsapp:+33600000000", "hello"))
 
 
 if __name__ == "__main__":

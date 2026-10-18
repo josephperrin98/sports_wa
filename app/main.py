@@ -1,9 +1,8 @@
 """HTTP layer: receives Twilio's webhook and hands it to the service. No logic here."""
 
-import asyncio
 import logging
 
-from fastapi import FastAPI, Request, Response
+from fastapi import BackgroundTasks, FastAPI, Request, Response
 
 from app import service, whatsapp
 
@@ -14,9 +13,10 @@ app = FastAPI()
 
 
 @app.post("/webhook/whatsapp")
-async def incoming_whatsapp(request: Request) -> Response:
+async def incoming_whatsapp(request: Request, background: BackgroundTasks) -> Response:
     message = whatsapp.parse_incoming(await request.body())
-    # The Claude call blocks for up to a minute. Running it in a worker thread keeps the
-    # server free to handle other requests in the meantime.
-    reply = await asyncio.to_thread(service.reply_to, message.text)
-    return Response(content=whatsapp.build_reply(reply), media_type="application/xml")
+    plan = service.plan_for(message.sender, message.text)
+    if plan.answer_later:
+        # Runs after the response is sent, so Twilio gets its quick reply in time.
+        background.add_task(service.answer, message.sender, message.text, whatsapp.send_message)
+    return Response(content=whatsapp.build_reply(plan.reply_now), media_type="application/xml")
