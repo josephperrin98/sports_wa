@@ -1,14 +1,14 @@
 # What I like to watch. app/preferences.py turns this into instructions for Claude.
-# Step 3 covers one slice only (Serie A). Step 4 adds the rest: tiers 1-5, team
-# boosts and the wildcard.
 
-# Kick-off times in replies are given in this time zone (where I usually am).
+# Kick-off times in replies are given in this time zone (where I usually am),
+# with this label after them so they're never ambiguous.
 timezone = "America/New_York"
+timezone_label = "ET"
 
 # "Starting soon" means kicking off within this many hours.
 starting_soon_hours = 3
 
-# Events per reply, and at most this many from the same sport.
+# Events per reply (plus the wildcard), and at most this many from the same sport.
 min_events = 3
 max_events = 5
 max_per_sport = 2
@@ -19,12 +19,118 @@ channels_per_event = 3
 # Which language (and so which country's broadcasters) to search for each event.
 # The first rule that applies wins. Any language is fine, even ones I don't speak.
 language_rules = [
-  "The language set for the competition in this list.",
+  "The language set for the team or competition in this list.",
   "Else the language of the league or competition (Serie A -> Italian).",
   "Else the home team's language.",
 ]
 
+# Players come first in tennis in this order. Rankings change every week, so
+# Claude looks the top 5 up live rather than this file naming them.
+tennis_rule = "French players first, then the current ATP top 5 (men only)."
+
+# Teams shown whenever they play, in any competition, above any tier.
+[[team_boosts]]
+name = "Olympique Lyonnais"
+language = "French"
+
+[[team_boosts]]
+name = "OGC Nice"
+language = "French"
+
+[[team_boosts]]
+name = "France national football team"
+language = "French"
+
+# Tier 1 is always shown if live or starting soon. Anything not listed is the
+# last tier, shown only when the tiers above can't fill the reply.
+# "language" is set only where it differs from the league's own language.
+
+[[competitions]]
+name = "Ligue 1"
+tier = 1
+
+[[competitions]]
+name = "Coupe de France"
+tier = 1
+
+[[competitions]]
+name = "Premier League"
+tier = 1
+
+[[competitions]]
+name = "Champions League"
+tier = 1
+
+[[competitions]]
+name = "Europa League"
+tier = 1
+
+[[competitions]]
+name = "Cycling Grand Tours"
+tier = 1
+language = "French"
+
+[[competitions]]
+name = "Cycling monuments"
+tier = 1
+language = "French"
+
+[[competitions]]
+name = "NFL"
+tier = 2
+
+[[competitions]]
+name = "Tennis Grand Slams"
+tier = 2
+
+[[competitions]]
+name = "Tennis Masters 1000"
+tier = 2
+
+[[competitions]]
+name = "Top 14"
+tier = 2
+language = "French"
+
+[[competitions]]
+name = "France national rugby team"
+tier = 2
+language = "French"
+
 [[competitions]]
 name = "Serie A"
 tier = 3
-language = "Italian"
+
+[[competitions]]
+name = "Other top European football leagues (Eredivisie, La Liga, Bundesliga)"
+tier = 3
+
+[[competitions]]
+name = "NBA"
+tier = 3
+
+[[competitions]]
+name = "College football"
+tier = 3
+
+[[competitions]]
+name = "Motorsports"
+tier = 4
+
+[[competitions]]
+name = "Triathlon and running majors"
+tier = 4
+
+[[competitions]]
+name = "Second-tier cycling races"
+tier = 4
+language = "French"
+
+# One random real sport from anywhere in the world, in every reply.
+# Not yet: "no repeat within 14 days" needs a memory of past replies.
+[wildcard]
+rules = [
+  "A real event with a source you found, and a way to watch it.",
+  "Live or starting soon if possible. Else the next real upcoming event or a replay you can watch, labelled (upcoming) or (replay).",
+  "Not a sport already in the reply.",
+]

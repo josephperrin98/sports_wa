@@ -13,7 +13,8 @@ import urllib.request
 API_URL = "https://api.anthropic.com/v1/messages"
 MODEL = "claude-opus-5-5"
 MAX_CONTINUATIONS = 3  # how many times we resume a turn the server paused mid-search
-TIMEOUT_SECONDS = 120  # a search-heavy answer can take a minute or more
+MAX_SEARCHES = 10  # broad schedule searches, then channels for the shortlist, then the wildcard
+TIMEOUT_SECONDS = 180  # a search-heavy answer can take a minute or two
 
 # List prices in US$, checked 2026-10-17. Only used for the cost estimate in the logs.
 PRICE_PER_INPUT_TOKEN = 4 / 1_000_000
@@ -59,7 +60,7 @@ def build_request(system: str, messages: list) -> dict:
         "max_tokens": 16000,
         "system": system,
         "messages": messages,
-        "tools": [{"type": "web_search_20260209", "name": "web_search", "max_uses": 5}],
+        "tools": [{"type": "web_search_20260209", "name": "web_search", "max_uses": MAX_SEARCHES}],
         "output_config": {"effort": "medium"},
         # If a safety check declines the request, the API retries it on another model.
         "fallbacks": "default",

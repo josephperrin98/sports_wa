@@ -1,6 +1,6 @@
 # sports_wa
 
-A WhatsApp bot that answers "what's on?" with a short, ranked list of live sports and the channel to watch them on. Work in progress: currently answers for Serie A only, with Claude and web search.
+A WhatsApp bot that answers "what's on?" with a short, ranked list of live sports and the channel to watch them on. Work in progress: covers every tier in `preferences.toml` plus a wildcard sport, with Claude and web search.
 
 ## How a question is answered
 

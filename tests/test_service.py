@@ -31,6 +31,7 @@ class ReplyToTest(unittest.TestCase):
         system, question = ask.calls[0]
         self.assertIn("Serie A (tier 3)", system)
         self.assertIn("only help find sport to watch", system)
+        self.assertIn("Wildcard: <sport> (<country>)", system)
         self.assertEqual(question, "Current time (UTC): 2026-10-17 18:30\n\nwhat's on?")
 
     def test_empty_message_gets_a_hint_without_calling_claude(self):
