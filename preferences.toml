@@ -20,8 +20,8 @@ channels_per_event = 3
 # The first rule that applies wins. Any language is fine, even ones I don't speak.
 language_rules = [
   "The language set for the team or competition in this list.",
-  "Else the language of the league or competition (Serie A -> Italian).",
-  "Else the home team's language.",
+  "Else the language of the league's own country (Serie A -> Italian). International competitions (Champions League, Europa League) have none, so go to the next rule.",
+  "Else the home team's language (Inter v Club Brugge in Milan -> Italian, in Bruges -> Dutch).",
 ]
 
 # Players come first in tennis in this order. Rankings change every week, so

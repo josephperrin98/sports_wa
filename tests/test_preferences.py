@@ -12,6 +12,7 @@ class LoadTest(unittest.TestCase):
         self.assertIn("- Top 14 (tier 2): search French broadcasters, in French.", prompt)
         self.assertIn("- Serie A (tier 3).", prompt)
         self.assertIn("Anything else is tier 5", prompt)
+        self.assertIn("International competitions (Champions League, Europa League) have none", prompt)
 
 
 class ToPromptTest(unittest.TestCase):
