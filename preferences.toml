@@ -129,8 +129,17 @@ language = "French"
 # One little-known sport from anywhere in the world, in every reply.
 # Not yet: "no repeat within 14 days" needs a memory of past replies.
 [wildcard]
+# Each reply looks in one of these regions, picked at random by the app, so the
+# wildcard varies even though Claude doesn't remember past replies.
+regions = [
+  "Central Asia", "East Asia", "South Asia", "Southeast Asia", "Middle East",
+  "North Africa", "West Africa", "East and Southern Africa", "Northern Europe",
+  "Eastern Europe", "Southern Europe", "South America", "Central America and the Caribbean",
+  "Oceania and the Pacific",
+]
 rules = [
-  "A sport most people in France or the US have never watched (like kok boru in Kyrgyzstan or sepak takraw in Thailand). Never a major league or a sport from the tiers above.",
+  "A sport most people in France or the US have never watched, from the wildcard region named in the message. Never a major league or a sport from the tiers above.",
+  "Kok boru (Kyrgyzstan) and sepak takraw (Thailand) only show the kind of sport meant. Pick from the region, not from these examples.",
   "A real event you found in a search, with a way to watch it.",
   "Live or on today if possible. Else a replay I can watch now, labelled (replay).",
 ]

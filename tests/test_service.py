@@ -25,7 +25,7 @@ class ReplyToTest(unittest.TestCase):
     def test_asks_claude_with_preferences_time_and_question(self):
         ask = FakeAsk()
 
-        reply = service.reply_to("what's on?", now=NOW, ask=ask)
+        reply = service.reply_to("what's on?", now=NOW, ask=ask, pick=lambda regions: regions[0])
 
         self.assertEqual(reply, "Inter v Milan - 20:45")
         system, question = ask.calls[0]
@@ -34,7 +34,20 @@ class ReplyToTest(unittest.TestCase):
         self.assertIn("Wildcard: <sport> (<country>)", system)
         self.assertIn(f"You have {claude.MAX_SEARCHES} searches at most", system)
         self.assertNotIn("Source:", system)
-        self.assertEqual(question, "Current time (UTC): 2026-10-17 18:30\n\nwhat's on?")
+        self.assertEqual(question, "Current time (UTC): 2026-10-17 18:30\nWildcard region: Central Asia\n\nwhat's on?")
+
+    def test_the_wildcard_region_is_picked_from_the_preferences(self):
+        offered = []
+
+        def pick(regions):
+            offered.extend(regions)
+            return regions[-1]
+
+        ask = FakeAsk()
+        service.reply_to("what's on?", now=NOW, ask=ask, pick=pick)
+
+        self.assertIn("Central Asia", offered)
+        self.assertIn("Wildcard region: Oceania and the Pacific", ask.calls[0][1])
 
     def test_empty_message_gets_a_hint_without_calling_claude(self):
         ask = FakeAsk()

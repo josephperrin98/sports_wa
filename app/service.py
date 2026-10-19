@@ -2,6 +2,7 @@
 
 import logging
 import os
+import random
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -135,13 +136,17 @@ def answer(text: str, now: datetime | None = None, box: AnswerBox | None = None)
     (box or BOX).fill(reply, now or datetime.now(timezone.utc))
 
 
-def reply_to(text: str, now: datetime | None = None, ask=claude.ask) -> str:
+def reply_to(text: str, now: datetime | None = None, ask=claude.ask, pick=random.choice) -> str:
     if not text.strip():
         return EMPTY_HINT
     now = now or datetime.now(timezone.utc)
-    system = SYSTEM_PROMPT.format(preferences=preferences.to_prompt(preferences.load()), searches=claude.MAX_SEARCHES)
-    # The time goes in the message, not the system prompt, so the system prompt never changes.
-    question = f"Current time (UTC): {now:%Y-%m-%d %H:%M}\n\n{text}"
+    prefs = preferences.load()
+    system = SYSTEM_PROMPT.format(preferences=preferences.to_prompt(prefs), searches=claude.MAX_SEARCHES)
+    # The time and the wildcard region go in the message, not the system prompt, so the
+    # system prompt never changes. The region is picked here because Claude can't vary
+    # its choice on its own: it never sees its past replies.
+    region = pick(prefs["wildcard"]["regions"])
+    question = f"Current time (UTC): {now:%Y-%m-%d %H:%M}\nWildcard region: {region}\n\n{text}"
     try:
         return ask(system, question)
     except claude.ClaudeError:
