@@ -1,9 +1,8 @@
 # Secrets: real keys live only in .env, never in git
 .env
 
-# Personal and planning notes: kept on this laptop only, never pushed
+# Planning notes: kept on this laptop only, never pushed
 PROJECT_BRIEF.md
-DECISIONS.md
 CONTEXT.local.md
 .claude/
 

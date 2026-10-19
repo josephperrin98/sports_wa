@@ -201,6 +201,15 @@ The checking is done by hand on purpose. A second Claude grading the first would
 - **Restarts:** the waiting answer lives in memory, so a container restart loses it, and you ask again.
 - **Twilio trial:** replies can only answer a message, which is why the answer is collected with a second message. The sandbox needs re-joining every 3 days.
 
+## Design decisions
+
+[DECISIONS.md](DECISIONS.md) explains why each part is built the way it is: the choice, the alternative rejected, and the trade-off. The main ones:
+- the standard library over SDKs wherever possible, so every line of the API call is visible
+- the Twilio sandbox after Meta locked a new business account
+- collecting the answer with a second message because of a Twilio trial limit
+- Cloud Logging instead of SQLite, because Cloud Run's disk is wiped on restart
+- how each prompt rule came from a real wrong answer
+
 ## Not built yet
 
 - No repeat of a wildcard within 14 days (needs reading back the answer log).
