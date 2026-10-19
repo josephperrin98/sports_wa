@@ -13,6 +13,7 @@ class LoadTest(unittest.TestCase):
         self.assertIn("- Serie A (tier 3).", prompt)
         self.assertIn("Anything else is tier 5", prompt)
         self.assertIn("International competitions (Champions League, Europa League) have none", prompt)
+        self.assertIn("If you can't find one, pick another event in the same region", prompt)
 
 
 class ToPromptTest(unittest.TestCase):
@@ -47,7 +48,7 @@ class ToPromptTest(unittest.TestCase):
     def test_renders_tennis_language_rules_and_wildcard(self):
         self.assertIn("Tennis: French players first.", self.prompt)
         self.assertIn("1. Rule one.\n2. Rule two.", self.prompt)
-        self.assertIn("exactly one per reply, after the events:\n- A real event.", self.prompt)
+        self.assertIn("one per reply, after the events:\n- A real event.", self.prompt)
 
     def test_renders_the_limits(self):
         self.assertIn("3 to 5 events plus the wildcard, at most 2 events from the same sport", self.prompt)

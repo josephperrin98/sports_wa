@@ -140,6 +140,7 @@ regions = [
 rules = [
   "A sport most people in France or the US have never watched, from the wildcard region named in the message. Never a major league or a sport from the tiers above.",
   "Kok boru (Kyrgyzstan) and sepak takraw (Thailand) only show the kind of sport meant. Pick from the region, not from these examples.",
-  "A real event you found in a search, with a way to watch it.",
-  "Live or on today if possible. Else a replay I can watch now, labelled (replay).",
+  "A real event you found in a search, that I can watch right now: live, or a replay available now, labelled (replay). Never one starting later.",
+  "It must have a channel or stream you found. If you can't find one, pick another event in the same region. If the region has nothing watchable now, pick from anywhere.",
+  "Never send a wildcard without a way to watch it, and never invent one. If nothing watchable turns up at all, leave the wildcard out.",
 ]

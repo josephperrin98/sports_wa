@@ -38,7 +38,7 @@ def to_prompt(prefs: dict) -> str:
         f"{MENS_ONLY if prefs.get('mens_only') else ''}"
         f"Tennis: {prefs['tennis_rule']}\n\n"
         f"Which language and country to search in (first rule that applies wins):\n{rules}\n\n"
-        f"Wildcard, exactly one per reply, after the events:\n{wildcard}\n\n"
+        f"Wildcard, one per reply, after the events:\n{wildcard}\n\n"
         f"Reply with {prefs['min_events']} to {prefs['max_events']} events plus the wildcard, "
         f"at most {prefs['max_per_sport']} events from the same sport. "
         f"Only today's events: live now, or starting before midnight in the {prefs['timezone']} time zone. "

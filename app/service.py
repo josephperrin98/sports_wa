@@ -32,7 +32,7 @@ like events that have ended or other days.
 3. About one search per shortlisted event for its channels, in the event's language \
 (rules below), for that country's broadcaster. For example, search in Italian for the \
 Italian broadcaster of a Serie A match.
-4. One or two searches for the wildcard.
+4. Two or three searches for the wildcard, until you find one I can watch now.
 Fixtures, scores and channels change all the time, so look them up now. Never answer from \
 memory. Only list an event a search result shows is on today. If you can't find its \
 channel, write "channel not found" rather than guessing.
@@ -47,7 +47,7 @@ Channels: <channel> / <channel> (<country>)
 <one line on why it's worth watching>
 Then the wildcard, exactly two lines:
 Wildcard: <sport> (<country>) - <event, and when, or (replay)>
-Watch: <channel or stream>
+Watch: <channel or stream, never "not found">
 Write every line in your own words. Never copy or quote text from search results.
 The "why" line is a real reason: a rivalry, the league table, form, a key player, what's \
 at stake. If you can't find one, leave the line out rather than filling it.
