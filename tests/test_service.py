@@ -1,3 +1,4 @@
+import json
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
@@ -48,6 +49,26 @@ class ReplyToTest(unittest.TestCase):
 
         self.assertIn("Central Asia", offered)
         self.assertIn("Wildcard region: Oceania and the Pacific", ask.calls[0][1])
+
+    def test_logs_one_answer_line_for_the_evaluation(self):
+        with self.assertLogs("app.service", level="INFO") as logs:
+            service.reply_to("what's on?", now=NOW, ask=FakeAsk(), pick=lambda regions: regions[0])
+
+        line = logs.records[-1].getMessage()
+        self.assertTrue(line.startswith("answer_log "))
+        self.assertEqual(
+            json.loads(line.removeprefix("answer_log ")),
+            {"time": "2026-10-17T18:30:00+00:00", "question": "what's on?",
+             "region": "Central Asia", "reply": "Inter v Milan - 20:45"},
+        )
+
+    def test_a_failed_answer_is_logged_too(self):
+        ask = FakeAsk(error=claude.ClaudeError("API returned 529"))
+
+        with self.assertLogs("app.service", level="INFO") as logs:
+            service.reply_to("what's on?", now=NOW, ask=ask)
+
+        self.assertIn(service.SORRY, logs.records[-1].getMessage())
 
     def test_empty_message_gets_a_hint_without_calling_claude(self):
         ask = FakeAsk()

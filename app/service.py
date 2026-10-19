@@ -1,5 +1,6 @@
 """Decides what to reply. Knows nothing about Twilio or HTTP."""
 
+import json
 import logging
 import os
 import random
@@ -15,6 +16,7 @@ EMPTY_HINT = "I can only read text messages for now."
 ACK = "On it, checking what's on. Send me any message in about a minute to get the answer."
 STILL_CHECKING = "Still checking. Send me another message in about 30 seconds."
 SORRY = "Sorry, I couldn't check what's on right now. Try again in a minute."
+ANSWER_LOG = "answer_log"  # marks the evaluation lines, so app/evaluation.py can find them
 
 SYSTEM_PROMPT = """\
 You are a sports curator on WhatsApp for one person. When they ask what's on, use web \
@@ -148,7 +150,19 @@ def reply_to(text: str, now: datetime | None = None, ask=claude.ask, pick=random
     region = pick(prefs["wildcard"]["regions"])
     question = f"Current time (UTC): {now:%Y-%m-%d %H:%M}\nWildcard region: {region}\n\n{text}"
     try:
-        return ask(system, question)
+        reply = ask(system, question)
     except claude.ClaudeError:
         log.exception("Claude call failed")
-        return SORRY
+        reply = SORRY
+    log_answer(now, text, region, reply)
+    return reply
+
+
+def log_answer(now: datetime, question: str, region: str, reply: str) -> None:
+    """One JSON line per answer, for the evaluation week.
+
+    Cloud Logging keeps it for 30 days. A file wouldn't survive: the container's disk
+    is wiped whenever it restarts.
+    """
+    record = {"time": now.isoformat(), "question": question, "region": region, "reply": reply}
+    log.info("%s %s", ANSWER_LOG, json.dumps(record, ensure_ascii=False))
